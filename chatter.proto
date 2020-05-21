@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package chatter;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+//
+// Message structures
+//
+
+message ClientInfo {
+    string nickname = 1;
+    int64 join_timestamp = 2;
+}
+
+message MessageDescriptor {
+    uint32 client_id = 1;
+    string contents = 2;
+}
+
+message ClientConnectionEvent {
+    string nickname = 1;
+    int64 timestamp = 2;
+}
+
+message ClientMessageEvent {
+    string nickname = 1;
+    string contents = 2;
+    int64 timestamp = 3;
+}
+
+message ServerMessageEvent {
+    string contents = 1;
+    int64 timestamp = 2;
+}
+
+
+//
+// Main service
+//
+
+service Chatter {
+
+    rpc GetClients(google.protobuf.Empty) returns(stream ClientInfo) {}
+
+    rpc Connect(google.protobuf.StringValue) returns(google.protobuf.UInt32Value) {}
+    rpc Disconnect(google.protobuf.UInt32Value) returns(google.protobuf.Empty) {}
+    rpc Message(MessageDescriptor) returns(google.protobuf.Empty) {}
+
+}
+
+
+//
+// Event handling service
+//
+
+service ChatterEvents {
+
+    rpc ListenClientConnect(google.protobuf.UInt32Value) returns(stream ClientConnectionEvent) {}
+    rpc ListenClientDisconnect(google.protobuf.UInt32Value) returns(stream ClientConnectionEvent) {}
+    rpc ListenClientMessage(google.protobuf.UInt32Value) returns(stream ClientMessageEvent) {}
+
+    rpc ListenServerMessage(google.protobuf.UInt32Value) returns(stream ServerMessageEvent) {}
+
+}
+
