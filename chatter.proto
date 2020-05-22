@@ -48,6 +48,8 @@ service Chatter {
     rpc Disconnect(google.protobuf.UInt32Value) returns(google.protobuf.Empty) {}
     rpc Message(MessageDescriptor) returns(google.protobuf.Empty) {}
 
+    rpc Maintain(stream google.protobuf.UInt32Value) returns(google.protobuf.Empty) {}
+
 }
 
 

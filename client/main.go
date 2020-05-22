@@ -41,6 +41,7 @@ func main() {
     clientId = clientIdValue.Value
     running = 1
     fmt.Println("Type `list` to list clients, `send` to send a message, or `quit` to disconnect")
+    go maintainConnection()
     go pollClientConnectEvents()
     go pollClientDisconnectEvents()
     go pollClientMessageEvents()
@@ -106,5 +107,27 @@ func main() {
             atomic.StoreInt32(&running, 0)
         }
     }
+    for atomic.LoadInt32(&disconnecting) != 0 {
+    }
+}
+
+func maintainConnection() {
+    var err error
+
+    cln, err := chatterCln.Maintain(context.Background())
+    if err != nil {
+        panic(err)
+    }
+
+    err = cln.Send(&wrappers.UInt32Value{Value: clientId})
+    if err != nil {
+        panic(err)
+    }
+
+    for atomic.LoadInt32(&running) == 1 {
+    }
+    atomic.StoreInt32(&disconnecting, 1)
+    cln.CloseAndRecv()
+    atomic.StoreInt32(&disconnecting, 0)
 }
 

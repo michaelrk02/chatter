@@ -6,6 +6,7 @@ import (
     "github.com/golang/protobuf/ptypes/empty"
     "github.com/golang/protobuf/ptypes/wrappers"
     "github.com/michaelrk02/chatter"
+    "io"
     "math/rand"
     "sync"
     "time"
@@ -38,6 +39,15 @@ func (s *chatterServer) ListClients() {
 func (s *chatterServer) checkExistency(clientId uint32) error {
     if _, idExists := s.clients[clientId]; !idExists {
         return chatter.CLIENT_NOT_FOUND
+    }
+    return nil
+}
+
+func (s *chatterServer) GetClients(req *empty.Empty, srv chatter.Chatter_GetClientsServer) error {
+    s.clientsMu.Lock()
+    defer s.clientsMu.Unlock()
+    for _, client := range s.clients {
+        srv.Send(&chatter.ClientInfo{Nickname: client.Nickname, JoinTimestamp: client.JoinTimestamp})
     }
     return nil
 }
@@ -92,7 +102,7 @@ func (s *chatterServer) Disconnect(ctx context.Context, req *wrappers.UInt32Valu
     }
     cl := s.clients[req.Value]
 
-    (*chatterEventsSrv).RevokeClient(req.Value)
+    chatterEventsSrv.RevokeClient(req.Value)
     delete(s.clients, req.Value)
 
     outMu.Lock()
@@ -124,12 +134,39 @@ func (s *chatterServer) Message(ctx context.Context, req *chatter.MessageDescrip
     return &empty.Empty{}, nil
 }
 
-func (s *chatterServer) GetClients(req *empty.Empty, srv chatter.Chatter_GetClientsServer) error {
-    s.clientsMu.Lock()
-    defer s.clientsMu.Unlock()
-    for _, client := range s.clients {
-        srv.Send(&chatter.ClientInfo{Nickname: client.Nickname, JoinTimestamp: client.JoinTimestamp})
+func (s *chatterServer) Maintain(srv chatter.Chatter_MaintainServer) error {
+    var err error
+
+    clientIdValue, err := srv.Recv()
+    if err != nil {
+        return err
     }
+    s.clientsMu.Lock()
+    if err = s.checkExistency(clientIdValue.Value); err != nil {
+        s.clientsMu.Unlock()
+        return err
+    }
+    cl := s.clients[clientIdValue.Value]
+    s.clientsMu.Unlock()
+
+    _, err = srv.Recv()
+    if err != nil && err != io.EOF {
+        fmt.Printf("Error: %s\n", err)
+
+        chatterEventsSrv.RevokeClient(clientIdValue.Value)
+        s.clientsMu.Lock()
+        delete(s.clients, clientIdValue.Value)
+        s.clientsMu.Unlock()
+
+        outMu.Lock()
+        defer outMu.Unlock()
+        fmt.Printf("%s (ID: %d) disconnected\n", cl.Nickname, clientIdValue.Value)
+
+        chatterEventsSrv.ServerMessage.Push(&chatterEventsSrv.Mu, &chatter.ServerMessageEvent{Contents: fmt.Sprintf("%s disconnected\n", cl.Nickname), Timestamp: time.Now().UTC().Unix()})
+
+        return err
+    }
+
     return nil
 }
 
