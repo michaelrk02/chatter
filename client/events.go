@@ -45,9 +45,9 @@ func pollEvents(event string, callback eventCallback) {
                 break
             } else if status.Code(err) == codes.Unavailable {
                 if atomic.LoadInt32(&running) == 1 {
+                    atomic.StoreInt32(&running, 0)
                     panic(errors.New("server shutdown"))
                 }
-                break
             } else {
                 panic(err)
             }
