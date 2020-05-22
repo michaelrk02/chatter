@@ -151,8 +151,6 @@ func (s *chatterServer) Maintain(srv chatter.Chatter_MaintainServer) error {
 
     _, err = srv.Recv()
     if err != nil && err != io.EOF {
-        fmt.Printf("Error: %s\n", err)
-
         chatterEventsSrv.RevokeClient(clientIdValue.Value)
         s.clientsMu.Lock()
         delete(s.clients, clientIdValue.Value)
