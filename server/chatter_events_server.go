@@ -64,7 +64,7 @@ func (s *chatterEventsServer) listen(clientId uint32, event string, stream grpc.
                 err = stream.SendMsg(evt)
             }
         } else {
-            err = CLIENT_NOT_FOUND
+            err = chatter.CLIENT_NOT_FOUND
         }
         s.Mu.Unlock()
 

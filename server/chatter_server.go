@@ -37,14 +37,14 @@ func (s *chatterServer) ListClients() {
 
 func (s *chatterServer) checkExistency(clientId uint32) error {
     if _, idExists := s.clients[clientId]; !idExists {
-        return CLIENT_NOT_FOUND
+        return chatter.CLIENT_NOT_FOUND
     }
     return nil
 }
 
 func (s *chatterServer) Connect(ctx context.Context, req *wrappers.StringValue) (*wrappers.UInt32Value, error) {
     if req.Value == "SERVER" {
-        return nil, INVALID_NICKNAME
+        return nil, chatter.INVALID_NICKNAME
     }
 
     s.clientsMu.Lock()
@@ -58,7 +58,7 @@ func (s *chatterServer) Connect(ctx context.Context, req *wrappers.StringValue) 
         }
     }
     if nicknameUsed {
-        return nil, NICKNAME_USED
+        return nil, chatter.NICKNAME_USED
     }
 
     var id uint32

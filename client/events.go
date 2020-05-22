@@ -4,6 +4,8 @@ import (
     "context"
     "fmt"
     "github.com/golang/protobuf/ptypes/wrappers"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
     "io"
     "sync/atomic"
     "time"
@@ -18,14 +20,14 @@ func pollClientConnectEvents() {
     for atomic.LoadInt32(&running) == 1 {
         evt, err := stream.Recv()
         if err != nil {
-            if err == io.EOF {
+            if err == io.EOF || status.Code(err) == codes.NotFound {
                 break
             } else {
                 panic(err)
             }
         }
         outMu.Lock()
-        fmt.Printf("[%s] %s has entered the chat\n", time.Unix(evt.Timestamp, 0).Local().Format(time.RFC3339), evt.Nickname)
+        fmt.Printf("[%s] %s has entered the chat\n", time.Unix(evt.Timestamp, 0).Local().Format(time.Kitchen), evt.Nickname)
         outMu.Unlock()
     }
 }
@@ -39,14 +41,14 @@ func pollClientDisconnectEvents() {
     for atomic.LoadInt32(&running) == 1 {
         evt, err := stream.Recv()
         if err != nil {
-            if err == io.EOF {
+            if err == io.EOF || status.Code(err) == codes.NotFound {
                 break
             } else {
                 panic(err)
             }
         }
         outMu.Lock()
-        fmt.Printf("[%s] %s has left the chat\n", time.Unix(evt.Timestamp, 0).Local().Format(time.RFC3339), evt.Nickname)
+        fmt.Printf("[%s] %s has left the chat\n", time.Unix(evt.Timestamp, 0).Local().Format(time.Kitchen), evt.Nickname)
         outMu.Unlock()
     }
 }
@@ -60,14 +62,14 @@ func pollClientMessageEvents() {
     for atomic.LoadInt32(&running) == 1 {
         evt, err := stream.Recv()
         if err != nil {
-            if err == io.EOF {
+            if err == io.EOF || status.Code(err) == codes.NotFound {
                 break
             } else {
                 panic(err)
             }
         }
         outMu.Lock()
-        fmt.Printf("[%s] %s: %s\n", time.Unix(evt.Timestamp, 0).Local().Format(time.RFC3339), evt.Nickname, evt.Contents)
+        fmt.Printf("[%s] %s: %s\n", time.Unix(evt.Timestamp, 0).Local().Format(time.Kitchen), evt.Nickname, evt.Contents)
         outMu.Unlock()
     }
 }
@@ -81,14 +83,14 @@ func pollServerMessageEvents() {
     for atomic.LoadInt32(&running) == 1 {
         evt, err := stream.Recv()
         if err != nil {
-            if err == io.EOF {
+            if err == io.EOF || status.Code(err) == codes.NotFound {
                 break
             } else {
                 panic(err)
             }
         }
         outMu.Lock()
-        fmt.Printf("[%s] SERVER: %s\n", time.Unix(evt.Timestamp, 0).Local().Format(time.RFC3339), evt.Contents)
+        fmt.Printf("[%s] SERVER: %s\n", time.Unix(evt.Timestamp, 0).Local().Format(time.Kitchen), evt.Contents)
         outMu.Unlock()
     }
 }
