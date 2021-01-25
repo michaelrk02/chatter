@@ -8,7 +8,7 @@ all: proto server client
 .PHONY : all
 
 proto:
-	protoc --go_out=plugins=grpc:. chatter.proto
+	protoc --go_out=. --go-grpc_out=. chatter.proto
 
 .PHONY : proto
 

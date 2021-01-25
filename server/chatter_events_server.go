@@ -8,6 +8,8 @@ import (
 )
 
 type chatterEventsServer struct {
+    chatter.UnimplementedChatterEventsServer
+
     Mu sync.Mutex
 
     ClientConnect eventQueueMap

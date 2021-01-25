@@ -13,6 +13,8 @@ import (
 )
 
 type chatterServer struct {
+    chatter.UnimplementedChatterServer
+
     clientsMu sync.Mutex
     clients map[uint32]*client
 }
